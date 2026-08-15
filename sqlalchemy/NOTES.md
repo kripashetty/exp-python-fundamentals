@@ -186,6 +186,7 @@ PostgreSQL
 
 
 ### Connecting to the DB from Python 
+We will need this as environment variables
 
 ```
 Hostname: localhost (but use db as hostname to connect from the pgAdmin container)
@@ -198,6 +199,7 @@ Python driver: psycopg
 
 
 ### DB URL connection 
+The format
 
 ```{dialect}{+driver}://{username}:{password}@{hostname}:{port}/{database}```
 
@@ -206,7 +208,144 @@ Python driver: psycopg
 url = 'postgresql+psycopg://retrofun:my-password@localhost:5432/retrofun'
 ```
 
-Environment variable 
+Environment variable will be
 
 DATABASE_URL =postgresql+psycopg://retrofun:my-password@localhost:5432/retrofun
 
+
+
+### Core and ORM
+
+Core has all integration logic for different database dialects . It has the classes to allows creating tables and write the sql statements in python.
+
+
+ORM is an abstraction that converts operations on Python objects to database operations.
+
+You can use only Core or only ORM or a combination
+
+
+### The most Important components of the SQLALchemy ORM application
+
+#### 1. Database Engine 
+
+- Engine object manages connections to the DB 
+
+
+#### 2. Model 
+
+- ORM model when used Database tables are defined as Python classes 
+- need a declerative base class called Model or Base that is the parent for all the classes that are associated with the tables
+- the Model needs to inherit from the SQLAlchemy DeclerativeBase class.
+
+#### 3. Database Metadata
+- maintains the definitions of all the tables in the Database 
+- Metadata.metadata hold a reference to the the metadata instance
+- **naming_convention** option is something that is used to definer how to name the indexes and the constraints. THis can become a concern when the database grows beyond a limit
+- If this is not provided then SQLAlchemy will initialize it with some random name. If then we need to modify or delete a constraint we will not know the name. 
+- So  in the Model base class initializes the Metadata with the naming conventions.
+- **createAll()** - create all the tables that are not yet created, so if there is a change to the model whoes table was already created, that will not be reflected
+- **deleteAll()** - deletes all the    tables in the database. Cant use this in production so we will learn Alembic
+
+#### 4. Session
+- Maintains a list of all created , deleted and modified Model instances.
+- These changes accumulate in the session and they are passed on to the database as part of the context of a Transaction when a session is "FLushed"
+- When the session is "Committed" the corresponding DB transaction is also committed and permanently written
+- Relational Databases guarantee Atomic transactions, so in case any error occurs the whole transaction is rolled back.
+- Session should be created as a ContextManager (ensures proper cleanup of resources in this case DB session)
+- SQLAlchemy has a *sessionmaker* factory function that allows to create the Custom Session class with all options
+- Session object has a begin() function that is used as an inner context manager. when it exists , it flushes everything and commits the session.
+  
+
+
+----
+
+### Queries 
+
+-
+
+
+### Filters 
+
+
+### ORder of results
+
+
+
+### Pagination
+
+
+
+### Indexes
+
+
+
+### Constriants 
+
+
+----
+
+## Relationship
+
+When to separate an attribute to a new table is a decision to make by a few iteration of the database design.These decisions are not absolute and need to be made with the application in mind.
+**Rule of thumb** : if you see duplication then create a new table and a relation.
+
+SQL Alchemy provides high level support to navigate the foreign key relationships
+the models involved in the relationship need to have the right attribute to stablish the relationship
+
+
+
+### 1. One to Many Relationship
+
+back populate 
+cascade - related models are added to DB as cascade behaviour
+
+Loader - Lazy and Eager - how does this decision affect performanace is it somthing to check when debugging if DB is a bottleneck - Having too many relationship queries in the session how does it impact performance.
+
+
+Deletion - 
+- deletes are cascaded 
+- you can control this 
+- you can decide how to deal with orphans
+Detaching 
+- chec is this is a valis operation and how to deal with the child model
+
+---
+
+### Many -To-Many Relationship
+
+- Join table 
+- Secondary relation managed by SQLAlchemy 
+- Deleting and removing a link is possible however it is not possible to enforce the at least one relation constraint like we would by making the relation attribute non nullable. SO the at least one link constraint needs to be managed by the application logic
+
+
+
+---
+### Alembic - Migrations 
+- create a migration repository by initializing Alembic - a subdirectory with all the migration scripts
+- alembic.ini
+
+
+
+
+
+### Advanced Many-To-Many
+-  A manay to many relation where the join relation has extra fields lie the order_items table has unit price and qty
+-  Now SQLAlchemy cannon manage the relation automatically since it wont know what to populate in the extra columne
+-  UUID4 , default callable reference for primary key, datetime.utcnow , hex attribute to get hexadecimal representation of the UUID
+-  Thin about the timezone consideration fortimestamp columns - use UTC
+-  **WriteOnlyMapped** typing hint  - defines a lazy = 'write-only'- when getting the entire collection from the relation is mostly unnecessary if no filters can be applied. So rather have it write only lazy loading and then query with filters as needed. In the relations that follow this loader so not follow the list semantics since the collection will not be loaded
+-  **Association Object Pattern ** in the simple M2M relation the *secondary* attribute in the realtion  on each table allowed SQLAlchemy to manage the relation but in this advanced M2M relation , this can be done as SQLAlchemy cannot manage the relation. Now both attributes in teh join tabel are non nullable so deleting either relation entity will fail. to deal with this , implement a delete cascade it or assume that wither cannot be deleted when a join record exists
+-  
+you need the relationship attribute in teh join table as well to both the related models
+
+
+
+### A Page Analytics Solution 
+
+
+
+### Asyncronous SQLAlchemy
+
+
+
+### SQLAlchemy and the Web

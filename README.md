@@ -290,7 +290,7 @@ This project uses [bpython](https://bpython-interpreter.org/) instead of the sta
 
 ```bash
 uv add bpython   # install
-bpython          # launch
+uv run --with bpython   bpython       # launch the REPL with the awareness of all the packages that uv has installed
 ```
 
 **Why bpython over python3:**
@@ -301,4 +301,3 @@ bpython          # launch
 - **Rewind** — undo the last line of input and re-enter it without restarting the session
 - **Paste mode** — cleanly handles indented blocks pasted from an editor without misfire
 - **`reload()` shortcut** — reload an imported module without restarting the REPL
-
