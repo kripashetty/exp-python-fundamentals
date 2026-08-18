@@ -13,4 +13,5 @@ dependencies = [
 [tool.uv.workspace]
 members = [
     "pydantic/pydantic-ai",
+    "fast-api/awesome-project",
 ]
